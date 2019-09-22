@@ -10,6 +10,20 @@ import java.util.Map;
 
 public final class EventLayer {
 
+	private EventDispatchMode mode;
+
+	public EventLayer() {
+
+		this(EventDispatchMode.IMMEDIATE);
+
+	}
+
+	public EventLayer(EventDispatchMode mode) {
+
+		this.mode = mode;
+
+	}
+
 	private List<Event> queue = Collections.synchronizedList(new ArrayList<>());
 
 	// Stores methods to the event that they are listening for, this is grouped by
@@ -89,6 +103,21 @@ public final class EventLayer {
 
 		for (int i = queue.size() - 1; i >= 0; i--)
 			dispatchImmediate(queue.remove(i));
+
+	}
+
+	public void dispatch(Event event) {
+
+		switch (mode) {
+
+			case IMMEDIATE:
+				dispatchImmediate(event);
+				break;
+			case LATER:
+				dispatchLater(event);
+				break;
+
+		}
 
 	}
 
