@@ -10,17 +10,17 @@ import java.util.Map;
 
 public final class EventLayer {
 
-	private EventDispatchMode mode;
+	private boolean useLater;
 
 	public EventLayer() {
 
-		this(EventDispatchMode.IMMEDIATE);
+		this(false);
 
 	}
 
-	public EventLayer(EventDispatchMode mode) {
+	public EventLayer(boolean useLater) {
 
-		this.mode = mode;
+		this.useLater = useLater;
 
 	}
 
@@ -108,16 +108,8 @@ public final class EventLayer {
 
 	public void dispatch(Event event) {
 
-		switch (mode) {
-
-			case IMMEDIATE:
-				dispatchImmediate(event);
-				break;
-			case LATER:
-				dispatchLater(event);
-				break;
-
-		}
+		if (useLater) dispatchLater(event);
+		else dispatchImmediate(event);
 
 	}
 
@@ -130,17 +122,17 @@ public final class EventLayer {
 	public void dispatchImmediate(Event event) {
 
 		dispatch(EventPriority.HIGHEST, event);
-
-		if (!event.canceled) dispatch(EventPriority.HIGH, event);
-		if (!event.canceled) dispatch(EventPriority.NORMAL, event);
-		if (!event.canceled) dispatch(EventPriority.LOW, event);
-		if (!event.canceled) dispatch(EventPriority.LOWEST, event);
-
+		dispatch(EventPriority.HIGH, event);
+		dispatch(EventPriority.NORMAL, event);
+		dispatch(EventPriority.LOW, event);
+		dispatch(EventPriority.LOWEST, event);
 		dispatch(EventPriority.MONITOR, event);
 
 	}
 
 	private void dispatch(EventPriority priority, Event event) {
+
+		if (event.canceled && !priority.ignoreCanceled) return;
 
 		// Loop though all event listeners
 		for (EventListener listener : listeners.keySet()) {
@@ -149,7 +141,7 @@ public final class EventLayer {
 			Map<EventPriority, Map<Class<? extends Event>, List<Method>>> priorityMap = listeners.get(listener);
 
 			// Only run this if any of the given priority is there
-			if (!priorityMap.containsKey(priority)) return;
+			if (!priorityMap.containsKey(priority)) continue;
 
 			// Run for this event type only
 			Class<?> eventType = event.getClass();
