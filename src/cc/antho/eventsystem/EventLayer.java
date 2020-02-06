@@ -51,7 +51,7 @@ public final class EventLayer {
 
 	}
 
-	public void registerEventListener(EventListener listener) {
+	public synchronized void registerEventListener(EventListener listener) {
 
 		// Don't bother registering this listener if it already is registered
 		if (listeners.containsKey(listener)) return;
@@ -93,33 +93,32 @@ public final class EventLayer {
 
 	}
 
-	public void deregisterEventListener(EventListener listener) {
+	public synchronized void deregisterEventListener(EventListener listener) {
 
 		listeners.remove(listener);
 
 	}
 
-	public void complete() {
+	public synchronized void complete() {
 
-		for (int i = queue.size() - 1; i >= 0; i--)
-			dispatchImmediate(queue.remove(i));
+		for (int i = queue.size() - 1; i >= 0; i--) dispatchImmediate(queue.remove(i));
 
 	}
 
-	public void dispatch(Event event) {
+	public synchronized void dispatch(Event event) {
 
 		if (useLater) dispatchLater(event);
 		else dispatchImmediate(event);
 
 	}
 
-	public void dispatchLater(Event event) {
+	public synchronized void dispatchLater(Event event) {
 
 		queue.add(event);
 
 	}
 
-	public void dispatchImmediate(Event event) {
+	public synchronized void dispatchImmediate(Event event) {
 
 		dispatch(EventPriority.HIGHEST, event);
 		dispatch(EventPriority.HIGH, event);
